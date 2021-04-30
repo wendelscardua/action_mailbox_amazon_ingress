@@ -7,13 +7,13 @@ require 'action_mailbox_amazon_ingress/version'
 Gem::Specification.new do |spec|
   spec.name          = 'action_mailbox_amazon_ingress'
   spec.version       = ActionMailboxAmazonIngress::VERSION
-  spec.authors       = ['Bob Farrell']
-  spec.email         = ['git@bob.frl']
+  spec.authors       = ['Wendel Scardua', 'Bob Farrell']
+  spec.email         = ['wendelscardua@gmail.com', 'git@bob.frl']
   spec.required_ruby_version = '>= 2.5'
 
   spec.summary       = 'Amazon SES ingress for Rails ActionMailbox'
   spec.description   = 'Integrate Amazon SES with ActionMailbox'
-  spec.homepage      = 'https://github.com/bobf/action_mailbox_amazon_ingress'
+  spec.homepage      = 'https://github.com/wendelscardua/action_mailbox_amazon_ingress'
   spec.license       = 'MIT'
 
   spec.files         = Dir.chdir(File.expand_path(__dir__)) do
