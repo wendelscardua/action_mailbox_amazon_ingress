@@ -7,7 +7,7 @@ Provides _Amazon SES/SNS_ integration with [_Rails ActionMailbox_](https://guide
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'action_mailbox_amazon_ingress', '~> 0.1.3'
+gem 'action_mailbox_amazon_ingress', github: 'wendelscardua/action_mailbox_amazon_ingress', branch: 's3-support'
 ```
 
 ## Configuration
@@ -26,14 +26,14 @@ https://example.com/rails/action_mailbox/amazon/inbound_emails
 
 Configure _ActionMailbox_ to accept emails from Amazon SES:
 
-```
+```ruby
 # config/environments/production.rb
 config.action_mailbox.ingress = :amazon
 ```
 
 Configure which _SNS_ topics will be accepted:
 
-```
+```ruby
 # config/environments/production.rb
 config.action_mailbox.amazon.subscribed_topics = %w(
   arn:aws:sns:eu-west-1:123456789001:example-topic-1
