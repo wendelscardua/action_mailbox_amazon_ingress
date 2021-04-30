@@ -5,14 +5,14 @@ module ActionMailbox
   #
   # Subscription requests must provide the following parameters in a JSON body:
   # - +Message+: Notification content
-  # - +MessagId+: Notification unique identifier
+  # - +MessageId+: Notification unique identifier
   # - +Timestamp+: iso8601 timestamp
   # - +TopicArn+: Topic identifier
   # - +Type+: Type of event ("Subscription")
   #
   # Inbound email events must provide the following parameters in a JSON body:
   # - +Message+: Notification content
-  # - +MessagId+: Notification unique identifier
+  # - +MessageId+: Notification unique identifier
   # - +Timestamp+: iso8601 timestamp
   # - +SubscribeURL+: Topic identifier
   # - +TopicArn+: Topic identifier
@@ -41,14 +41,19 @@ module ActionMailbox
   #          arn:aws:sns:us-east-1:123456789002:example-topic-2
   #        )
   #
+  # 2.1. (if emails are stored on S3) configure S3 options accordingly:
+  #
+  #        config.action_mailbox.amazon.s3.region = 'us-east-1'
+  #        config.action_mailbox.amazon.s3.encrypted = true
+  #
   # 3. {Configure SES}[https://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-notifications.html]
-  #    to route emails through SNS.
+  #    to route emails through SNS. Alternatively, {Configure SES}[https://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-action-s3.html]
+  #    to receive emails through S3/SNS.
   #
   #    Configure SNS to send emails to +/rails/action_mailbox/amazon/inbound_emails+.
   #
   #    If your application is found at <tt>https://example.com</tt> you would
   #    specify the fully-qualified URL <tt>https://example.com/rails/action_mailbox/amazon/inbound_emails</tt>.
-  #
 
   module Ingresses
     module Amazon
@@ -88,8 +93,8 @@ module ActionMailbox
 
         def confirmation_response_code
           @confirmation_response_code ||= begin
-            Net::HTTP.get_response(URI(notification['SubscribeURL'])).code
-          end
+                                            Net::HTTP.get_response(URI(notification['SubscribeURL'])).code
+                                          end
         end
 
         def notification
@@ -114,6 +119,7 @@ module ActionMailbox
         def mail
           return nil unless notification['Type'] == 'Notification'
           return nil unless message['notificationType'] == 'Received'
+          return s3_content if ::Rails.configuration.action_mailbox.amazon.s3.present?
 
           message['content']
         end
@@ -126,6 +132,36 @@ module ActionMailbox
 
         def valid_topics
           ::Rails.configuration.action_mailbox.amazon.subscribed_topics
+        end
+
+        def s3_content
+          action = message['receipt']['action']
+          s3_client.get_object(bucket: action['bucketName'],
+                               key: action['objectKeyPrefix'] + action['objectKey']).body.read
+        end
+
+        def s3_client
+          @s3_client ||= if ::Rails.configuration.action_mailbox.amazon.s3.encrypted
+                           s3_encryped_client
+                         else
+                           s3_unencryped_client
+                         end
+        end
+
+        def s3_encryped_client
+          Aws::S3::EncryptionV2::Client.new(
+            region: ::Rails.configuration.action_mailbox.amazon.s3.region,
+            kms_key_id: :kms_allow_decrypt_with_any_cmk,
+            key_wrap_schema: :kms_context,
+            content_encryption_schema: :aes_gcm_no_padding,
+            security_profile: :v2_and_legacy
+          )
+        end
+
+        def s3_unencryped_client
+          Aws::S3::Client.new(
+            region: ::Rails.configuration.action_mailbox.amazon.s3.region
+          )
         end
       end
     end

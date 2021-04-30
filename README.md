@@ -7,7 +7,7 @@ Provides _Amazon SES/SNS_ integration with [_Rails ActionMailbox_](https://guide
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'action_mailbox_amazon_ingress', '~> 0.1.0'
+gem 'action_mailbox_amazon_ingress', github: 'wendelscardua/action_mailbox_amazon_ingress'
 ```
 
 ## Configuration
@@ -15,6 +15,8 @@ gem 'action_mailbox_amazon_ingress', '~> 0.1.0'
 ### Amazon SES/SNS
 
 Configure _SES_ to [route emails through SNS](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/configure-sns-notifications.html).
+
+Alternatively, configure S3 to [receive emails through S3/SNS](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/receiving-email-action-s3.html)
 
 If your website is hosted at https://www.example.com then configure _SNS_ to publish the _SES_ notification topic to this _HTTP_ endpoint:
 
@@ -24,14 +26,14 @@ https://example.com/rails/action_mailbox/amazon/inbound_emails
 
 Configure _ActionMailbox_ to accept emails from Amazon SES:
 
-```
+```ruby
 # config/environments/production.rb
 config.action_mailbox.ingress = :amazon
 ```
 
 Configure which _SNS_ topics will be accepted:
 
-```
+```ruby
 # config/environments/production.rb
 config.action_mailbox.amazon.subscribed_topics = %w(
   arn:aws:sns:eu-west-1:123456789001:example-topic-1
@@ -42,6 +44,14 @@ config.action_mailbox.amazon.subscribed_topics = %w(
 Subscriptions will now be auto-confirmed and messages will be delivered via _ActionMailbox_.
 
 Note that even if you manually confirm subscriptions you will still need to provide a list of subscribed topics; messages from unrecognized topics will be ignored.
+
+If using S3 action, configure S3 options as well:
+
+```ruby
+# config/environments/production.rb
+config.action_mailbox.amazon.s3.region = 'us-east-1'
+config.action_mailbox.amazon.s3.encrypted = true
+```
 
 See [ActionMailbox documentation](https://guides.rubyonrails.org/action_mailbox_basics.html) for full usage information.
 
