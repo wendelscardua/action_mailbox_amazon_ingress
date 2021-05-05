@@ -119,7 +119,7 @@ module ActionMailbox
         def mail
           return nil unless notification['Type'] == 'Notification'
           return nil unless message['notificationType'] == 'Received'
-          return s3_content if ::Rails.configuration.action_mailbox.amazon.s3.present?
+          return s3_content if ::Rails.configuration.action_mailbox.amazon.s3.region.present?
 
           message['content']
         end
